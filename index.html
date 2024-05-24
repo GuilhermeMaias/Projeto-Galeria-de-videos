@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galeria de Vídeos</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-image: url('https://img.freepik.com/fotos-gratis/fundo-de-produto-cinza-escuro-liso_53876-108322.jpg?t=st=1715823579~exp=1715827179~hmac=509944608b50f6a2fb620276ae2ab7897952b584558a63f6155f2d86a03ef280&w=740');
+        background-size: cover;
+        background-position: center;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    header {
+        width: 100%;
+        padding: 10px 0;
+        background-color: #333;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    header .logo {
+        width: 100%; /* Alterado para ocupar todo o cabeçalho */
+        height: auto; /* Para manter a proporção */
+        margin: 0;
+        padding: 0;
+    }
+
+    header .nav-links {
+        margin-bottom: 10px;
+    }
+
+    header .category-links {
+        width: 100%;
+        background-color: #444;
+        padding: 5px 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    header .category-links a {
+        color: #fff;
+        text-decoration: none;
+        margin: 0 10px;
+    }
+
+    header a {
+        color: #fff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    main {
+        text-align: center;
+        margin-top: 20px;
+        margin-bottom: 60px; /* Espaçamento inferior */
+    }
+
+    footer {
+        width: 100%;
+        padding: 10px 0;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        position: relative;
+        margin-top: 20px;
+    }
+
+    footer a {
+        color: #fff;
+        text-decoration: none;
+        margin: 0 10px;
+    }
+
+    form {
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        align-items: center;
+    }
+
+    .form-group label {
+        margin-right: 10px;
+    }
+
+    .form-group input[type="url"] {
+        margin-right: 10px;
+        flex-grow: 1;
+    }
+
+    .videos {
+        display: none;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .videos.active {
+        display: flex;
+    }
+
+    .video {
+        margin: 10px;
+        position: relative;
+    }
+
+    .delete-button {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: red;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .menu a {
+        display: block; /* Torna cada link uma linha separada */
+        margin-bottom: 5px; /* Adiciona espaço entre os links */
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <img src="LOGO.PNG" alt="Logo" class="logo">
+        <div class="category-links" id="categoryLinks">
+            <a href="#" onclick="showCategory('series')">Séries</a>
+            <a href="#" onclick="showCategory('estudos')">Estudos</a>
+            <a href="#" onclick="showCategory('entretenimento')">Entretenimento</a>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Página Inicial</a>
+        </div>
+        <h1>Bem Vindo A Sua Galeria de Vídeos</h1>
+    </div>
+</header>
+
+<main class="container">
+    <form id="videoForm">
+        <label for="category">Categoria:</label>
+        <select id="category" name="category" required>
+            <option value="">Selecione uma categoria</option>
+            <option value="series">Séries</option>
+            <option value="estudos">Estudos</option>
+            <option value="entretenimento">Entretenimento</option>
+        </select>
+        <br><br>
+        <div class="form-group">
+            <label for="videoUrl">URL do Vídeo:</label>
+            <input type="url" id="videoUrl" name="videoUrl" placeholder="Insira a URL do vídeo" required>
+            <button type="submit">Adicionar Vídeo</button>
+        </div>
+    </form>
+
+    <div class="menu">
+        <h2>Gerenciar Categorias</h2>
+        <form id="categoryForm">
+            <label for="newCategory">Nova Categoria:</label>
+            <input type="text" id="newCategory" placeholder="Nova Categoria" required>
+            <button type="submit">Adicionar Categoria</button>
+        </form>
+        <form id="deleteCategoryForm">
+            <label for="deleteCategory">Remover Categoria:</label>
+            <select id="deleteCategory" required>
+                <option value="">Selecione uma categoria</option>
+                <option value="series">Séries</option>
+                <option value="estudos">Estudos</option>
+                <option value="entretenimento">Entretenimento</option>
+            </select>
+            <button type="submit">Remover Categoria</button>
+        </form>
+    </div>
+
+    <div id="videosContainer" class="videos">
+        <!-- Conteúdo de vídeo será adicionado dinamicamente aqui -->
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>Entre em contato: exemplo@email.com</p>
+        <div class="social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Twitter</a>
+            <a href="#">Instagram</a>
+        </div>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCategoriesFromLocalStorage();
+        loadVideosFromLocalStorage();
+    });
+
+    function showCategory(category) {
+        var videosContainer = document.getElementById('videosContainer');
+        var videos = JSON.parse(localStorage.getItem('videos')) || {};
+        videosContainer.innerHTML = ''; // Limpa o conteúdo anterior
+
+        if (videos[category]) {
+            videos[category].forEach(function(url) {
+                addVideoToGallery(category, url);
+            });
+        }
+        videosContainer.classList.add('active');
+    }
+
+    document.getElementById('categoryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var newCategory = document.getElementById('newCategory').value.trim();
+        if (newCategory && !categoryExists(newCategory)) {
+            addCategory(newCategory);
+            saveCategoryToLocalStorage(newCategory);
+            document.getElementById('newCategory').value = '';
+        }
+    });
+
+    document.getElementById('deleteCategoryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var categoryToDelete = document.getElementById('deleteCategory').value;
+        if (categoryToDelete) {
+            removeCategory(categoryToDelete);
+            removeCategoryFromLocalStorage(categoryToDelete);
+        }
+    });
+
+    document.getElementById('videoForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var category = document.getElementById('category').value;
+        var videoUrl = document.getElementById('videoUrl').value;
+        if (category && videoUrl) {
+            var embedUrl = convertToEmbedUrl(videoUrl);
+            if (embedUrl && !videoExists(category, embedUrl)) {
+                addVideoToGallery(category, embedUrl);
+                saveVideoToLocalStorage(category, embedUrl);
+                document.getElementById('category').value = '';
+                document.getElementById('videoUrl').value = '';
+            } else {
+                alert('URL de vídeo inválida ou já existente. Por favor, insira uma URL válida do YouTube, Vimeo, ou uma URL direta de vídeo/imagem.');
+            }
+        }
+    });
+
+    function convertToEmbedUrl(url) {
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            var videoId = url.split('v=')[1] || url.split('youtu.be/')[1];
+            var ampersandPosition = videoId.indexOf('&');
+            if (ampersandPosition !== -1) {
+                videoId = videoId.substring(0, ampersandPosition);
+            }
+            return 'https://www.youtube.com/embed/' + videoId;
+        } else if (url.includes('vimeo.com')) {
+            var videoId = url.split('vimeo.com/')[1];
+            return 'https://player.vimeo.com/video/' + videoId;
+        } else if (url.match(/\.(jpeg|jpg|gif|png|mp4|webm)$/) != null) {
+            return url;
+        } else {
+            return null;
+        }
+    }
+
+    function addVideoToGallery(category, url) {
+        var videosContainer = document.getElementById('videosContainer');
+        var videoDiv = document.createElement('div');
+        videoDiv.classList.add('video');
+        videoDiv.dataset.category = category;
+
+        if (url.includes('youtube.com') || url.includes('youtu.be') || url.includes('vimeo.com')) {
+            var iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.width = '320';
+            iframe.height = '240';
+            iframe.allowFullscreen = true; // Permitir tela cheia
+            videoDiv.appendChild(iframe);
+        } else if (url.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+            var img = document.createElement('img');
+            img.src = url;
+            img.width = 320;
+            img.height = 240;
+            videoDiv.appendChild(img);
+        } else if (url.match(/\.(mp4|webm)$/) != null) {
+            var video = document.createElement('video');
+            video.src = url;
+            video.width = 320;
+            video.height = 240;
+            video.controls = true;
+            videoDiv.appendChild(video);
+        }
+
+        var deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Excluir';
+        deleteButton.classList.add('delete-button');
+        deleteButton.addEventListener('click', function() {
+            removeVideo(category, url);
+            videoDiv.remove();
+        });
+
+        videoDiv.appendChild(deleteButton);
+        videosContainer.appendChild(videoDiv);
+    }
+
+    function categoryExists(category) {
+        var categorySelect = document.getElementById('category');
+        for (var i = 0; i < categorySelect.options.length; i++) {
+            if (categorySelect.options[i].value === category) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function addCategory(category) {
+        var categorySelect = document.getElementById('category');
+        var deleteCategorySelect = document.getElementById('deleteCategory');
+        var option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+        deleteCategorySelect.appendChild(option.cloneNode(true));
+
+        var categoryLinks = document.getElementById('categoryLinks');
+        var link = document.createElement('a');
+        link.href = '#';
+        link.textContent = category;
+        link.onclick = function() {
+            showCategory(category);
+        };
+        categoryLinks.appendChild(link);
+    }
+
+    function removeCategory(category) {
+        var categorySelect = document.getElementById('category');
+        var deleteCategorySelect = document.getElementById('deleteCategory');
+        for (var i = 0; i < categorySelect.options.length; i++) {
+            if (categorySelect.options[i].value === category) {
+                categorySelect.remove(i);
+                deleteCategorySelect.remove(i);
+                break;
+            }
+        }
+
+        var categoryLinks = document.getElementById('categoryLinks');
+        var links = categoryLinks.getElementsByTagName('a');
+        for (var j = 0; j < links.length; j++) {
+            if (links[j].textContent === category) {
+                categoryLinks.removeChild(links[j]);
+                break;
+            }
+        }
+    }
+
+    function videoExists(category, url) {
+        var videos = JSON.parse(localStorage.getItem('videos')) || {};
+        if (videos[category] && videos[category].includes(url)) {
+            return true;
+        }
+        return false;
+    }
+
+    function saveCategoryToLocalStorage(category) {
+        var categories = JSON.parse(localStorage.getItem('categories')) || [];
+        categories.push(category);
+        localStorage.setItem('categories', JSON.stringify(categories));
+    }
+
+    function removeCategoryFromLocalStorage(category) {
+        var categories = JSON.parse(localStorage.getItem('categories')) || [];
+        var index = categories.indexOf(category);
+        if (index !== -1) {
+            categories.splice(index, 1);
+            localStorage.setItem('categories', JSON.stringify(categories));
+        }
+
+        var videos = JSON.parse(localStorage.getItem('videos')) || {};
+        if (videos[category]) {
+            delete videos[category];
+            localStorage.setItem('videos', JSON.stringify(videos));
+        }
+    }
+
+    function loadCategoriesFromLocalStorage() {
+        var categories = JSON.parse(localStorage.getItem('categories')) || [];
+        categories.forEach(function(category) {
+            addCategory(category);
+        });
+
+        // Adiciona categorias pré-definidas
+        var predefinedCategories = ['series', 'estudos', 'entretenimento'];
+        predefinedCategories.forEach(function(category) {
+            if (!categoryExists(category)) {
+                addCategory(category);
+            }
+        });
+    }
+
+    function saveVideoToLocalStorage(category, url) {
+        var videos = JSON.parse(localStorage.getItem('videos')) || {};
+        if (!videos[category]) {
+            videos[category] = [];
+        }
+        videos[category].push(url);
+        localStorage.setItem('videos', JSON.stringify(videos));
+    }
+
+    function removeVideo(category, url) {
+        var videos = JSON.parse(localStorage.getItem('videos')) || {};
+        if (videos[category]) {
+            var index = videos[category].indexOf(url);
+            if (index !== -1) {
+                videos[category].splice(index, 1);
+                if (videos[category].length === 0) {
+                    delete videos[category];
+                }
+                localStorage.setItem('videos', JSON.stringify(videos));
+            }
+        }
+    }
+
+    function loadVideosFromLocalStorage() {
+        var videos = JSON.parse(localStorage.getItem('videos')) || {};
+        for (var category in videos) {
+            if (videos.hasOwnProperty(category)) {
+                videos[category].forEach(function(url) {
+                    addVideoToGallery(category, url);
+                });
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
